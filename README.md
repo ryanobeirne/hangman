@@ -4,6 +4,8 @@ A classic command-line word guessing game, written in Rust. You have to guess wh
 
 ## Play
 
+[![asciicast](https://asciinema.org/a/uLZjnzWbxgWa5m1Y34e5CDAh9.svg)](https://asciinema.org/a/uLZjnzWbxgWa5m1Y34e5CDAh9)
+
 Requires Rust: https://rustup.rs
 
 ```sh
