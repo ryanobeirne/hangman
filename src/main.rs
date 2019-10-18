@@ -11,28 +11,40 @@ use scene::SCENE;
 mod dict;
 use dict::WORDS;
 
+mod letters;
+use letters::*;
+
+mod words;
+use words::*;
+
 fn main() {
     println!("Hangman!");
 
     let mut rng = rand::thread_rng();
-    let word = &WORDS.choose(&mut rng).unwrap();
-    let mut game = Game::new(word);
+    let word = loop{
+        let rand_word = WORDS.choose(&mut rng).unwrap().to_owned();
+        if let Ok(word) = Word::try_from(rand_word) {
+            break word;
+        }
+    };
+
+    let mut game = Game::new(&word);
 
     let outcome = game.play();
 
-    println!("{}\n{}\n{}", game, outcome, word.to_uppercase());
+    println!("{}\n{}\n{}", game, outcome, word);
 }
 
 struct Game {
-    word: String,
-    guessed_right: BTreeSet<char>,
-    guessed_wrong: BTreeSet<char>,
+    word: Word,
+    guessed_right: BTreeSet<Letter>,
+    guessed_wrong: BTreeSet<Letter>,
 }
 
 impl Game {
-    fn new(word: &str) -> Game {
+    fn new(word: &Word) -> Game {
         Game {
-            word: word.to_string(),
+            word: word.to_owned(),
             guessed_right: BTreeSet::new(),
             guessed_wrong: BTreeSet::new(),
         }
@@ -52,25 +64,23 @@ impl Game {
         }
     }
 
-    fn guess(&mut self, input: &Stdin) -> char {
+    fn guess(&mut self, input: &Stdin) -> Letter {
         print!("Guess a letter: ");
         stdout().flush().expect("Problem writing to stdout!");
 
         let mut buf = String::new();
         input.read_line(&mut buf).expect("Problem reading from stdin!");
 
-        match buf.to_lowercase().trim() {
-            "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" |
-            "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" => {
-                let character = buf.to_lowercase().chars().nth(0).unwrap();
-                if self.contains(&character) {
-                    println!("You guessed '{}' already!", &character);
+        match Letter::try_from(buf.as_str()) {
+            Ok(letter) => {
+                if self.contains(&letter) {
+                    println!("You guessed '{}' already!", &letter);
                     self.guess(&stdin())
                 } else {
-                    character
+                    letter
                 }
             },
-            _ => {
+            Err(_) => {
                 println!("Invalid guess!");
                 self.guess(&stdin())
             }
@@ -88,17 +98,17 @@ impl Game {
         }
     }
 
-    fn insert(&mut self, c: char) {
-        if self.word.contains(&c.to_string()) {
+    fn insert(&mut self, c: Letter) {
+        if self.word.contains(&c) {
             self.guessed_right.insert(c);
         } else {
             self.guessed_wrong.insert(c);
         }
     }
 
-    fn contains(&self, character: &char) -> bool {
-        self.guessed_right.contains(character) ||
-        self.guessed_wrong.contains(character)
+    fn contains(&self, letter: &Letter) -> bool {
+        self.guessed_right.contains(letter) ||
+        self.guessed_wrong.contains(letter)
     }
 }
 
@@ -126,9 +136,9 @@ impl fmt::Display for Game {
 
             self.word.chars().map(|c| {
                 if self.guessed_right.contains(&c) {
-                    format!("{} ", c.to_uppercase())
+                    format!("{} ", c)
                 } else {
-                    format!("_ " )
+                    format!("_ ")
                 }
             }).collect::<String>(),
 

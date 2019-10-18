@@ -1,4 +1,4 @@
-pub const WORDS: [&str; 47002] = [
+pub const WORDS: &[&str] = &[
 "aaliyah",
 "aardvark",
 "aarhus",
