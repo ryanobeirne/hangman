@@ -1,8 +1,7 @@
-use std::fmt;
 use std::collections::BTreeSet;
+use std::fmt;
 use std::io::{stdin, stdout, Stdin, Write};
 
-extern crate rand;
 use rand::prelude::*;
 
 mod scene;
@@ -21,12 +20,14 @@ fn main() {
     println!("Hangman!");
 
     let mut rng = rand::thread_rng();
-    let word = loop{
+    let word = loop {
         let rand_word = WORDS.choose(&mut rng).unwrap().to_owned();
         if let Ok(word) = Word::try_from(rand_word) {
             break word;
         }
     };
+
+    println!("{} letters:", word.len());
 
     let mut game = Game::new(&word);
 
@@ -53,13 +54,13 @@ impl Game {
     fn play(&mut self) -> GameOutcome {
         loop {
             println!("{}", self);
-            
+
             let guess = self.guess(&stdin());
             self.insert(guess);
 
             if let PlayOutcome::GameOver(outcome) = self.check_game() {
                 stdout().flush().expect("Problem writing to stdout!");
-                break outcome
+                break outcome;
             }
         }
     }
@@ -69,7 +70,9 @@ impl Game {
         stdout().flush().expect("Problem writing to stdout!");
 
         let mut buf = String::new();
-        input.read_line(&mut buf).expect("Problem reading from stdin!");
+        input
+            .read_line(&mut buf)
+            .expect("Problem reading from stdin!");
 
         match Letter::try_from(buf.as_str()) {
             Ok(letter) => {
@@ -79,17 +82,16 @@ impl Game {
                 } else {
                     letter
                 }
-            },
+            }
             Err(_) => {
                 println!("Invalid guess!");
                 self.guess(&stdin())
             }
         }
-
     }
 
     fn check_game(&self) -> PlayOutcome {
-        if self.word.chars().all(|c| self.guessed_right.contains(&c)) {
+        if self.word.letters().all(|l| self.guessed_right.contains(&l)) {
             PlayOutcome::GameOver(GameOutcome::Win)
         } else if self.guessed_wrong.len() >= SCENE.len() - 1 {
             PlayOutcome::GameOver(GameOutcome::Lose)
@@ -107,8 +109,7 @@ impl Game {
     }
 
     fn contains(&self, letter: &Letter) -> bool {
-        self.guessed_right.contains(letter) ||
-        self.guessed_wrong.contains(letter)
+        self.guessed_right.contains(letter) || self.guessed_wrong.contains(letter)
     }
 }
 
@@ -133,17 +134,19 @@ impl fmt::Display for Game {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}{}\n{}",
             SCENE[self.guessed_wrong.len()],
-
-            self.word.chars().map(|c| {
-                if self.guessed_right.contains(&c) {
-                    format!("{} ", c)
-                } else {
-                    format!("_ ")
-                }
-            }).collect::<String>(),
-
-            self.guessed_wrong.iter()
-                .map(|c| format!("{} ", c))
+            self.word
+                .letters()
+                .map(|l| {
+                    if self.guessed_right.contains(&l) {
+                        format!("{} ", l)
+                    } else {
+                        format!("_ ")
+                    }
+                })
+                .collect::<String>(),
+            self.guessed_wrong
+                .iter()
+                .map(|l| format!("{} ", l.to_lowercase()))
                 .collect::<String>(),
         )
     }
