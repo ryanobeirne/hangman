@@ -1,3 +1,16 @@
+use rand::prelude::*;
+use super::*;
+
+pub fn rand_word() -> Word {
+    let mut rng = rand::thread_rng();
+    loop {
+        let rand_word = WORDS.choose(&mut rng).unwrap().to_owned();
+        if let Ok(word) = Word::try_from(rand_word) {
+            break word;
+        }
+    }
+}
+
 pub const WORDS: &[&str] = &[
     "aaliyah",
     "aardvark",

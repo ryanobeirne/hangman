@@ -56,11 +56,22 @@ impl Game {
 
     fn check_game(&self) -> PlayOutcome {
         if self.word.letters().all(|l| self.guessed_right.contains(&l)) {
-            PlayOutcome::GameOver(GameOutcome::Win)
+            let score = self.score();
+            PlayOutcome::GameOver(GameOutcome::Win(score))
         } else if self.guessed_wrong.len() >= SCENE.len() - 1 {
             PlayOutcome::GameOver(GameOutcome::Lose)
         } else {
             PlayOutcome::Next
+        }
+    }
+
+    pub fn score(&self) -> usize {
+        let correct = self.guessed_right.len();
+        let diff = correct as isize - self.guessed_wrong.len() as isize;
+        if diff > 0 {
+            correct + diff as usize
+        } else {
+            correct
         }
     }
 
@@ -77,9 +88,9 @@ impl Game {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum GameOutcome {
-    Win,
+    Win(usize),
     Lose,
 }
 

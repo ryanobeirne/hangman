@@ -36,6 +36,10 @@ impl<'a> FromIterator<&'a Letter> for String {
 impl TryFrom<&str> for Word {
     type Error = io::Error;
     fn try_from(s: &str) -> Result<Self, Self::Error> {
+        if s.is_empty() {
+            return Err(io::Error::from(io::ErrorKind::InvalidInput));
+        }
+
         let mut letters = Vec::new();
 
         for c in s.chars() {
